@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Удаление {{ ad.title }}</title>
+</head>
+<body>
+
+<h1>Вы уверены что хотите удалить "{{ ad.title }}"?</h1>
+
+<form method="post">
+     {% csrf_token %}
+     <button type="submit">Удалить</button>
+     <a href="{% url 'ad_list' %}">Отмена</a>
+ </form>
+
+</body>
+</html>

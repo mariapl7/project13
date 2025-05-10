@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Список объявлений</title>
+</head>
+<body>
+   <h1>Список объявлений</h1>
+   <a href="{% url 'ad_create' %}">Создать новое объявление</a>
+   <ul>
+       {% for ad in ads %}
+           <li>
+               <a href="{% url 'ad_detail' ad.id %}">{{ ad.title }}</a> -
+               <a href="{% url 'ad_update' ad.id %}">Редактировать</a> -
+               <a href="{% url 'ad_delete' ad.id %}">Удалить</a>
+           </li>
+       {% endfor %}
+   </ul>
+</body>
+</html>
