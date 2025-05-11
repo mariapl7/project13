@@ -1,21 +1,28 @@
+from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 
+class Product(models.Model):
+    """Модель товара."""
 
-class Ad(models.Model):
-    """
-    Модель объявления.
-
-    Attributes:
-        title (str): Заголовок объявления.
-        description (str): Описание объявления.
-        created_at (datetime): Дата и время создания объявления.
-        updated_at (datetime): Дата и время последнего обновления объявления.
-    """
-    title = models.CharField(max_length=200)
+    name = models.CharField(max_length=255)
     description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        """Возвращает строковое представление объявления."""
-        return self.title
+        return self.name
+
+    def clean(self):
+        if self.price < 0:
+            raise ValidationError('Цена не может быть отрицательной.')
+
+class Comment(models.Model):
+    """Модель комментария."""
+
+    product = models.ForeignKey(Product, related_name='comments', on_delete=models.CASCADE)
+    text = models.TextField()
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Comment by {self.owner} on {self.product}'

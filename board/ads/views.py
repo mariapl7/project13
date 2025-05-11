@@ -1,82 +1,73 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Ad
-from .forms import AdForm
+from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
+from .models import Product, Comment
+from .serializers import ProductSerializer, CommentSerializer
+from .permissions import IsOwner, IsAdminOrReadOnly
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import ProductForm, CommentForm
 
 
-def ad_list(request):
-    """
-    Отображает список всех объявлений.
-    """
-    ads = Ad.objects.all()
-    return render(request, 'ads/ad_list.html', {'ads': ads})
+class ProductPagination(PageNumberPagination):
+    """Класс пагинации для товаров."""
+    page_size = 4  # Ограничение на 4 объекта на странице
 
 
-def ad_detail(request, ad_id):
-    """
-    Отображает детали конкретного объявления по его ID.
+class ProductViewSet(viewsets.ModelViewSet):
+    """Представление для операций с товарами."""
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    pagination_class = ProductPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name']  # Позволяет фильтровать по имени товара
 
-    Args:
-        ad_id (int): ID объявления.
-    """
-    ad = get_object_or_404(Ad, id=ad_id)
-    return render(request, 'ads/ad_detail.html', {'ad': ad})
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return [IsOwner() if self.action in ['update', 'destroy'] else IsAdminOrReadOnly()]
+        return super().get_permissions()
 
 
-def ad_create(request):
-    """
-    Создает новое объявление.
+class CommentViewSet(viewsets.ModelViewSet):
+    """Представление для операций с комментариями."""
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
 
-    Если запрос POST, сохраняет форму и перенаправляет на список объявлений.
-    В противном случае отображает пустую форму.
-    """
-    if request.method == 'POST':
-        form = AdForm(request.POST)
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return [IsOwner() if self.action in ['update', 'destroy'] else IsAdminOrReadOnly()]
+        return super().get_permissions()
+
+
+# Обычные представления для работы с формами
+
+def create_product(request):
+    """Создание нового товара."""
+    if request.method == "POST":
+        form = ProductForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('ad_list')
+            product = form.save(commit=False)
+            product.owner = request.user  # Устанавливаем владельца товара
+            product.save()
+            return redirect('product_list')  # Замените на ваше имя URL для списка продуктов
     else:
-        form = AdForm()
+        form = ProductForm()
 
-    return render(request, 'ads/ad_form.html', {'form': form})
+    return render(request, 'create_product.html', {'form': form})
 
 
-def ad_update(request, ad_id):
-    """
-    Обновляет существующее объявление по его ID.
+def add_comment(request, product_id):
+    """Добавление комментария к товару."""
+    product = get_object_or_404(Product, id=product_id)
 
-    Args:
-        ad_id (int): ID объявления.
-
-    Если запрос POST, сохраняет обновленную форму и перенаправляет на список объявлений.
-    В противном случае отображает текущие данные в форме.
-    """
-    ad = get_object_or_404(Ad, id=ad_id)
-
-    if request.method == 'POST':
-        form = AdForm(request.POST, instance=ad)
+    if request.method == "POST":
+        form = CommentForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('ad_detail', ad_id=ad.id)
+            comment = form.save(commit=False)
+            comment.product = product
+            comment.owner = request.user  # Предполагается, что пользователь аутентифицирован
+            comment.save()
+            return redirect('product_detail', product_id=product.id)  # Замените на ваше имя URL для деталей продукта
     else:
-        form = AdForm(instance=ad)
+        form = CommentForm()
 
-    return render(request, 'ads/ad_form.html', {'form': form})
-
-
-def ad_delete(request, ad_id):
-    """
-    Удаляет существующее объявление по его ID.
-
-    Args:
-        ad_id (int): ID объявления.
-
-    Если запрос POST, удаляет объявление и перенаправляет на список объявлений.
-    В противном случае отображает страницу подтверждения удаления.
-    """
-    ad = get_object_or_404(Ad, id=ad_id)
-
-    if request.method == 'POST':
-        ad.delete()
-        return redirect('ad_list')
-
-    return render(request, 'ads/ad_confirm_delete.html', {'ad': ad})
+    return render(request, 'add_comment.html', {'form': form, 'product': product})
