@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from .models import Product, Comment
@@ -22,9 +22,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     filterset_fields = ['name']  # Позволяет фильтровать по имени товара
 
     def get_permissions(self):
-        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            return [IsOwner() if self.action in ['update', 'destroy'] else IsAdminOrReadOnly()]
-        return super().get_permissions()
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsOwner()]
+        elif self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return [IsAdminOrReadOnly()]
+        else:
+            return [permissions.AllowAny()]
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -33,9 +36,12 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_permissions(self):
-        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            return [IsOwner() if self.action in ['update', 'destroy'] else IsAdminOrReadOnly()]
-        return super().get_permissions()
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsOwner()]
+        elif self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return [IsAdminOrReadOnly()]
+        else:
+            return [permissions.AllowAny()]
 
 
 # Обычные представления для работы с формами
@@ -48,7 +54,7 @@ def create_product(request):
             product = form.save(commit=False)
             product.owner = request.user  # Устанавливаем владельца товара
             product.save()
-            return redirect('product_list')  # Замените на ваше имя URL для списка продуктов
+            return redirect('product_list')
     else:
         form = ProductForm()
 
@@ -66,7 +72,7 @@ def add_comment(request, product_id):
             comment.product = product
             comment.owner = request.user  # Предполагается, что пользователь аутентифицирован
             comment.save()
-            return redirect('product_detail', product_id=product.id)  # Замените на ваше имя URL для деталей продукта
+            return redirect('product_detail', product_id=product.id)
     else:
         form = CommentForm()
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product
+from .models import Product, Comment
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -10,5 +10,9 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CommentSerializer:
-    pass
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели комментария."""
+
+    class Meta:
+        model = Comment
+        fields = '__all__'

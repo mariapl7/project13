@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -63,8 +65,6 @@ WSGI_APPLICATION = 'board.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-import os
-from urllib.parse import urlparse
 
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:password@localhost/mydatabase')
 
@@ -73,7 +73,7 @@ url = urlparse(DATABASE_URL)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': url.path[1:],  # Убираем первый символ '/'
+        'NAME': url.path[1:] if url.path else '',  # Убираем первый символ '/'
         'USER': url.username,
         'PASSWORD': url.password,
         'HOST': url.hostname,
@@ -125,7 +125,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'auth.User'
 
 
 REST_FRAMEWORK = {
@@ -141,5 +141,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'email@gmail.com'
-EMAIL_HOST_PASSWORD = 'email_password'
+EMAIL_HOST_USER = 'miplotnova@mail.ru'
+EMAIL_HOST_PASSWORD = '12345'
+
