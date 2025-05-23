@@ -1,42 +1,28 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 
-class UserManager(BaseUserManager):
-    """Менеджер для модели пользователя."""
+class User(AbstractUser):
+    # username = models.CharField(max_length=30, blank=True, null=True, verbose_name='Имя пользователя', unique=True)
+    username = None
 
-    def create_user(self, email, password=None, **extra_fields):
-        """Создает и возвращает пользователя с указанным email и паролем."""
-        if not email:
-            raise ValueError('Email is required')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
+    email = models.EmailField(unique=True, verbose_name='Email')
 
-    def create_superuser(self, email, password=None, **extra_fields):
-        """Создает и возвращает суперпользователя с указанным email и паролем."""
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+    phone_number = models.CharField(max_length=35, verbose_name='Номер телефона', blank=True, null=True,
+    help_text='Введите номер телефона')
 
-        return self.create_user(email, password, **extra_fields)
+    avatar = models.ImageField(upload_to='users/avatars/', verbose_name='Картинка', blank=True, null=True,
+    help_text='Загрузите аватар')
 
-
-class User(AbstractBaseUser, PermissionsMixin):
-    """Модель пользователя."""
-
-    email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-
-    objects = UserManager()
+    user_country = models.CharField(max_length=50, verbose_name='Страна вашего проживания',
+    help_text='Введите название страны')
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = []
 
-    def __str__(self):
-        """Возвращает строковое представление пользователя."""
-        return self.email
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+        def __str__(self):
+            return self.email

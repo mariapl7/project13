@@ -10,7 +10,7 @@ class ProductAdmin(admin.ModelAdmin):
     Используется для управления товарами через админку Django.
     """
 
-    list_display = ('name', 'price', 'owner', 'created_at')  # Поля, отображаемые в списке
+    list_display = ('name', 'price', 'owner')  # Поля, отображаемые в списке
     list_filter = ('owner',)  # Фильтрация по владельцу
     search_fields = ('name', 'description')  # Поиск по названию и описанию
     ordering = ('-price',)  # Сортировка по цене (по убыванию)
