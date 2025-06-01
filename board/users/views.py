@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, ResetPasswordSerializer, ResetPasswordConfirmSerializer
 from rest_framework.views import APIView
 
 
@@ -15,6 +15,7 @@ class RegisterUserView(APIView):
     """APIView для регистрации нового пользователя."""
 
     permission_classes = [AllowAny]  # Разрешить доступ без авторизации
+    serializer_class = ResetPasswordSerializer
 
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -26,8 +27,8 @@ class RegisterUserView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
+
+
 class ResetPasswordView(generics.GenericAPIView):
     """Представление для запроса сброса пароля.
     Пользователь отправляет свой email и получает ссылку для сброса пароля.
@@ -41,7 +42,7 @@ class ResetPasswordView(generics.GenericAPIView):
             user = User.objects.get(email=email)
             token = default_token_generator.make_token(user)
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_link = f"http://yourfrontend.com/reset_password/{uidb64}/{token}/"
+            reset_link = f"http://127.0.0.1/reset_password/{uidb64}/{token}/"
 
             send_mail(
                 subject="Password Reset Request",
@@ -61,6 +62,7 @@ class ResetPasswordConfirmView(generics.GenericAPIView):
     """
 
     permission_classes = [AllowAny]
+    serializer_class = ResetPasswordConfirmSerializer
 
     def post(self, request):
         uidb64 = request.data.get("uid")
